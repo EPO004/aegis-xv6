@@ -1,12 +1,30 @@
-*~
-_*
+# xv6 build output
 *.o
 *.d
 *.asm
 *.sym
 *.img
-/mkfs/mkfs
-/kernel/kernel
-/user/usys.S
-.gdbinit
-TAGS
+*.out
+kernel/kernel
+mkfs/mkfs
+user/_*
+
+# QEMU and debugger output
+*.pcap
+.gdbinit.tmpl-riscv
+qemu.log
+
+# Host tools
+.venv/
+__pycache__/
+*.pyc
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Generated analysis output; keep curated CSV/PNG files explicitly if needed
+analysis/generated/
+user/usys.S
