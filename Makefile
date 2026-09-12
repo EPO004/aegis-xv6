@@ -153,8 +153,11 @@ UPROGS=\
 	$U/_ktrace\
 	$U/_obstest\
 
-fs.img: mkfs/mkfs README.md $(UPROGS)
-	mkfs/mkfs fs.img README.md $(UPROGS)
+_README: README.md
+	cp README.md _README
+
+fs.img: mkfs/mkfs _README $(UPROGS)
+	mkfs/mkfs fs.img _README $(UPROGS)
 
 -include kernel/*.d user/*.d
 
@@ -163,6 +166,7 @@ clean:
 	*/*.o */*.d */*.asm */*.sym \
 	$K/kernel fs.img \
 	mkfs/mkfs .gdbinit \
+	_README \
         $U/usys.S \
 	$(UPROGS)
 
