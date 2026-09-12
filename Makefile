@@ -18,6 +18,8 @@ OBJS = \
   $K/trap.o \
   $K/syscall.o \
   $K/sysproc.o \
+  $K/aegis_trace.o \
+  $K/sysaegis.o \
   $K/bio.o \
   $K/fs.o \
   $K/log.o \
@@ -146,6 +148,10 @@ UPROGS=\
 	$U/_forphan\
 	$U/_dorphan\
 	$U/_sync\
+	$U/_trace\
+	$U/_pstat\
+	$U/_ktrace\
+	$U/_obstest\
 
 fs.img: mkfs/mkfs README.md $(UPROGS)
 	mkfs/mkfs fs.img README.md $(UPROGS)

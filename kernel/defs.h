@@ -9,6 +9,13 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct aegis_event;
+struct aegis_pstat;
+
+// aegis_trace.c
+void            aegis_trace_init(void);
+void            aegis_trace_emit(int, int, long, long);
+int             aegis_trace_next(unsigned long, struct aegis_event*);
 
 // bio.c
 void            binit(void);
@@ -103,6 +110,7 @@ void            yield(void);
 int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
+int             proc_get_pstat(int, struct aegis_pstat*);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
