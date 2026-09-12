@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "aegis.h"
 
 struct cpu cpus[NCPU];
 
@@ -124,6 +125,16 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  uint64 now = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
+  p->trace_mask = 0;
+  p->created_tick = now;
+  p->runnable_since = now;
+  p->run_started = 0;
+  p->run_ticks = 0;
+  p->ready_ticks = 0;
+  p->context_switches = 0;
+  p->syscall_count = 0;
+  p->page_faults = 0;
 
   // Allocate a trapframe page.
   if ((p->trapframe = (struct trapframe *)kalloc()) == 0) {
@@ -167,6 +178,15 @@ freeproc(struct proc *p)
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
+  p->trace_mask = 0;
+  p->created_tick = 0;
+  p->runnable_since = 0;
+  p->run_started = 0;
+  p->run_ticks = 0;
+  p->ready_ticks = 0;
+  p->context_switches = 0;
+  p->syscall_count = 0;
+  p->page_faults = 0;
   p->state = UNUSED;
 }
 
@@ -225,6 +245,7 @@ userinit(void)
 
   p->cwd = namei("/");
 
+  p->runnable_since = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
   p->state = RUNNABLE;
 
   release(&p->lock);
@@ -288,6 +309,7 @@ kfork(void)
   np->cwd = idup(p->cwd);
 
   safestrcpy(np->name, p->name, sizeof(p->name));
+  np->trace_mask = __atomic_load_n(&p->trace_mask, __ATOMIC_RELAXED);
 
   pid = np->pid;
 
@@ -298,6 +320,7 @@ kfork(void)
   release(&wait_lock);
 
   acquire(&np->lock);
+  np->runnable_since = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
   np->state = RUNNABLE;
   release(&np->lock);
 
@@ -448,8 +471,13 @@ scheduler(void)
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
+        uint64 now = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
+        p->ready_ticks += now - p->runnable_since;
+        p->run_started = now;
+        p->context_switches++;
         p->state = RUNNING;
         c->proc = p;
+        aegis_trace_emit(AEGIS_EV_SCHED_IN, 0, 0, 0);
         swtch(&c->context, &p->context);
 
         // Don't re-enable interrupts on release.
@@ -457,6 +485,9 @@ scheduler(void)
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
+        now = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
+        p->run_ticks += now - p->run_started;
+        aegis_trace_emit(AEGIS_EV_SCHED_OUT, p->state, 0, 0);
         c->proc = 0;
         found = 1;
       }
@@ -502,6 +533,7 @@ yield(void)
 {
   struct proc *p = myproc();
   acquire(&p->lock);
+  p->runnable_since = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
   p->state = RUNNABLE;
   sched();
   release(&p->lock);
@@ -588,6 +620,7 @@ wakeup(void *chan)
       // If this waiting process has gotten so far as to actually
       // go to sleep, also set it back to RUNNING.
       if (p->state == SLEEPING) {
+        p->runnable_since = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
         p->state = RUNNABLE;
       }
     }
@@ -609,6 +642,7 @@ kkill(int pid)
       p->killed = 1;
       if (p->state == SLEEPING) {
         // Wake process from sleep().
+        p->runnable_since = __atomic_load_n(&ticks, __ATOMIC_RELAXED);
         p->state = RUNNABLE;
       }
       release(&p->lock);
@@ -636,6 +670,33 @@ killed(struct proc *p)
   k = p->killed;
   release(&p->lock);
   return k;
+}
+
+int
+proc_get_pstat(int pid, struct aegis_pstat *out)
+{
+  struct proc *p;
+
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state != UNUSED && p->pid == pid) {
+      out->pid = p->pid;
+      out->state = p->state;
+      safestrcpy(out->name, p->name, sizeof(out->name));
+      out->created_tick = p->created_tick;
+      out->run_ticks = p->run_ticks;
+      if (p->state == RUNNING)
+        out->run_ticks += __atomic_load_n(&ticks, __ATOMIC_RELAXED) - p->run_started;
+      out->ready_ticks = p->ready_ticks;
+      out->context_switches = p->context_switches;
+      out->syscall_count = p->syscall_count;
+      out->page_faults = p->page_faults;
+      release(&p->lock);
+      return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
 }
 
 // Copy to either a user address, or kernel address,
