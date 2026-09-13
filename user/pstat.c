@@ -19,8 +19,8 @@ main(int argc, char **argv)
     exit(1);
   }
   printf("pid,state,name,created,run,ready,switches,syscalls,faults\n");
-  printf("%d,%d,%s,%lu,%lu,%lu,%lu,%lu,%lu\n", st.pid, st.state,
-         st.name, st.created_tick, st.run_ticks, st.ready_ticks,
-         st.context_switches, st.syscall_count, st.page_faults);
+  printf("%d,%d,%s,%lu,%lu,%lu,%lu,%lu,%lu\n", st.pid, st.state, st.name,
+         st.created_tick, st.run_ticks, st.ready_ticks, st.context_switches,
+         st.syscall_count, st.page_faults);
   exit(0);
 }

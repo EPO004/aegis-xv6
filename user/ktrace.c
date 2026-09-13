@@ -12,8 +12,8 @@ main(void)
 
   printf("seq,tick,type,pid,cpu,code,arg0,result\n");
   while ((result = ktrace_read(after, &ev)) > 0) {
-    printf("%lu,%lu,%d,%d,%d,%d,%ld,%ld\n", ev.seq, ev.tick, ev.type,
-           ev.pid, ev.cpu, ev.code, ev.arg0, ev.result);
+    printf("%lu,%lu,%d,%d,%d,%d,%ld,%ld\n", ev.seq, ev.tick, ev.type, ev.pid,
+           ev.cpu, ev.code, ev.arg0, ev.result);
     after = ev.seq;
   }
   if (result < 0) {

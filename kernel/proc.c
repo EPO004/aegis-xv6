@@ -686,7 +686,8 @@ proc_get_pstat(int pid, struct aegis_pstat *out)
       out->created_tick = p->created_tick;
       out->run_ticks = p->run_ticks;
       if (p->state == RUNNING)
-        out->run_ticks += __atomic_load_n(&ticks, __ATOMIC_RELAXED) - p->run_started;
+        out->run_ticks +=
+          __atomic_load_n(&ticks, __ATOMIC_RELAXED) - p->run_started;
       out->ready_ticks = p->ready_ticks;
       out->context_switches = p->context_switches;
       out->syscall_count = p->syscall_count;

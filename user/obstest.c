@@ -26,7 +26,8 @@ main(void)
     fail("basic stats");
   for (int i = 0; i < 4; i++)
     sink = getpid();
-  if (pstat(getpid(), &after) < 0 || after.syscall_count <= before.syscall_count)
+  if (pstat(getpid(), &after) < 0 ||
+      after.syscall_count <= before.syscall_count)
     fail("basic stats");
   printf("obstest: basic stats: PASS\n");
 

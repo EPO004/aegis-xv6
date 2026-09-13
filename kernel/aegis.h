@@ -2,7 +2,7 @@
 #define _AEGIS_H_
 
 #define AEGIS_TRACE_CAP 256
-#define AEGIS_NAME_LEN 16
+#define AEGIS_NAME_LEN  16
 
 enum aegis_event_type {
   AEGIS_EV_SYSCALL = 1,
