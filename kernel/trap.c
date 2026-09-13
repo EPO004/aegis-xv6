@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "aegis.h"
 
 struct spinlock tickslock;
 uint ticks;
@@ -72,6 +73,12 @@ usertrap(void)
              vmfault(p->pagetable, p->sz, r_stval(),
                      (r_scause() == 13) ? 1 : 0) != 0) {
     // page fault on lazily-allocated page
+    uint64 cause = r_scause();
+    uint64 address = r_stval();
+    acquire(&p->lock);
+    p->page_faults++;
+    release(&p->lock);
+    aegis_trace_emit(AEGIS_EV_PAGE_FAULT, (int)cause, (long)address, 0);
   } else {
     printk("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printk("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());

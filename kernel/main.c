@@ -20,6 +20,7 @@ main()
     kvminit();          // create kernel page table
     kvminithart();      // turn on paging
     procinit();         // process table
+    aegis_trace_init(); // kernel event ring
     trapinit();         // trap vectors
     trapinithart();     // install kernel trap vector
     plicinit();         // set up interrupt controller

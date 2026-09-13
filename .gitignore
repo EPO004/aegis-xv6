@@ -28,3 +28,4 @@ __pycache__/
 # Generated analysis output; keep curated CSV/PNG files explicitly if needed
 analysis/generated/
 user/usys.S
+_README

@@ -1,6 +1,8 @@
 #define SBRK_ERROR ((char *)-1)
 
 struct stat;
+struct aegis_pstat;
+struct aegis_event;
 
 // system calls
 int fork(void);
@@ -25,6 +27,9 @@ char *sys_sbrk(int, int);
 int pause(int);
 int uptime(void);
 int sync(void);
+int trace(unsigned long);
+int pstat(int, struct aegis_pstat *);
+int ktrace_read(unsigned long, struct aegis_event *);
 
 // ulib.c
 int stat(const char *, struct stat *);
